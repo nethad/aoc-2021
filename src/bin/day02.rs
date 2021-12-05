@@ -1,14 +1,7 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader},
-};
+use aoc_2021::common::read_lines;
 
 fn main() {
-    let file = File::open("src/bin/inputs/day02.txt").expect("Could not open file!");
-    let lines = BufReader::new(file)
-        .lines()
-        .filter_map(|line| line.ok())
-        .collect::<Vec<_>>();
+    let lines = read_lines("inputs/day02.txt");
 
     let mut horizontal_position = 0;
     let mut depth = 0;

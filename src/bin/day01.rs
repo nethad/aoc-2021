@@ -1,13 +1,9 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader},
-};
+use aoc_2021::common::read_lines;
 
 fn main() {
-    let file = File::open("src/bin/inputs/day01.txt").expect("Could not open file!");
-    let lines = BufReader::new(file)
-        .lines()
-        .filter_map(|line| line.unwrap().parse::<usize>().ok())
+    let lines = read_lines("inputs/day01.txt")
+        .iter()
+        .filter_map(|line| line.parse::<usize>().ok())
         .collect::<Vec<usize>>();
     let increase_count = lines.windows(2).filter(|pair| pair[1] > pair[0]).count();
 
