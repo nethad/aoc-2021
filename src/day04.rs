@@ -1,6 +1,6 @@
-type Board = Vec<Vec<isize>>;
+type Board = Vec<Vec<i32>>;
 
-pub fn determine_bingo_column(numbers: &Vec<isize>, board: &Board) -> Option<Vec<isize>> {
+pub fn determine_bingo_column(numbers: &[i32], board: &Board) -> Option<Vec<i32>> {
     for pos in 0..board.first().unwrap().len() {
         let mut column = board.iter().map(|row| row[pos]);
         if column.all(|number| numbers.contains(&number)) {
@@ -10,7 +10,7 @@ pub fn determine_bingo_column(numbers: &Vec<isize>, board: &Board) -> Option<Vec
     None
 }
 
-pub fn determine_bingo_row<'a>(numbers: &Vec<isize>, board: &'a Board) -> Option<&'a Vec<isize>> {
+pub fn determine_bingo_row<'a>(numbers: &[i32], board: &'a Board) -> Option<&'a Vec<i32>> {
     board
         .iter()
         .any(|line| line.iter().all(|number| numbers.contains(number)));
@@ -23,17 +23,24 @@ pub fn determine_bingo_row<'a>(numbers: &Vec<isize>, board: &'a Board) -> Option
     None
 }
 
-pub fn board_sum(board: &Board) -> isize {
-    board.iter().map(|row| row.iter().sum::<isize>()).sum()
+pub fn board_sum(board: &Board) -> i32 {
+    board.iter().map(|row| row.iter().sum::<i32>()).sum()
 }
 
-pub fn determine_bingo(numbers: &Vec<isize>, board: &Board) -> Option<(isize, isize)> {
+pub fn board_numbers_for_board<'a>(numbers: &'a [i32], board: &'a Board) -> Vec<&'a i32> {
+    board
+        .iter()
+        .flat_map(|row| row.iter().filter(|num| numbers.contains(num)))
+        .collect::<Vec<&i32>>()
+}
+
+pub fn determine_bingo(numbers: &[i32], board: &Board) -> Option<(i32, i32)> {
     let rows = determine_bingo_row(numbers, board);
     let columns = determine_bingo_column(numbers, board);
 
     if rows.is_some() || columns.is_some() {
-        let board_sum = board_sum(board);
-        let numbers_sum = numbers.iter().sum::<isize>();
+        let board_sum: i32 = board_sum(board);
+        let numbers_sum: i32 = board_numbers_for_board(numbers, board).into_iter().sum();
         let last_number = numbers.iter().last().unwrap();
         Some((*last_number, board_sum - numbers_sum))
     } else {
@@ -41,7 +48,7 @@ pub fn determine_bingo(numbers: &Vec<isize>, board: &Board) -> Option<(isize, is
     }
 }
 
-pub fn determine_bingo_boards(numbers: &Vec<isize>, boards: &Vec<Board>) -> Option<(isize, isize)> {
+pub fn determine_bingo_boards(numbers: &[i32], boards: &Vec<Board>) -> Option<(i32, i32)> {
     for board in boards {
         let sum = determine_bingo(numbers, board);
         if sum.is_some() {
@@ -51,10 +58,10 @@ pub fn determine_bingo_boards(numbers: &Vec<isize>, boards: &Vec<Board>) -> Opti
     None
 }
 
-pub fn parse_bingo_numbers(line: &str) -> Vec<isize> {
+pub fn parse_bingo_numbers(line: &str) -> Vec<i32> {
     line.trim()
         .split(",")
-        .filter_map(|number| number.trim().parse::<isize>().ok())
+        .filter_map(|number| number.trim().parse::<i32>().ok())
         .collect()
 }
 
@@ -71,7 +78,7 @@ pub fn parse_boards(lines: &Vec<String>) -> Vec<Board> {
             board.push(
                 line.trim()
                     .split(" ")
-                    .filter_map(|n| n.trim().parse::<isize>().ok())
+                    .filter_map(|n| n.trim().parse::<i32>().ok())
                     .collect(),
             );
         }
@@ -82,14 +89,14 @@ pub fn parse_boards(lines: &Vec<String>) -> Vec<Board> {
     boards
 }
 
-pub fn parse_input(lines: &Vec<String>) -> (Vec<isize>, Vec<Board>) {
+pub fn parse_input(lines: &Vec<String>) -> (Vec<i32>, Vec<Board>) {
     let numbers = parse_bingo_numbers(lines.first().unwrap());
     let boards = parse_boards(lines);
 
     (numbers, boards)
 }
 
-pub fn day04(lines: &Vec<String>) -> isize {
+pub fn day04(lines: &Vec<String>) -> i32 {
     let (numbers, boards) = parse_input(lines);
 
     for index in 1..numbers.len() {
@@ -199,6 +206,27 @@ mod tests {
             Some((19, 245)),
             determine_bingo(&vec![0, 24, 7, 5, 19], &board)
         );
+    }
+
+    #[test]
+    fn test_sum_without_matches() {
+        let board: Board = vec![
+            vec![22, 13, 17, 11, 0],
+            vec![8, 2, 23, 4, 24],
+            vec![21, 9, 14, 16, 7],
+            vec![6, 10, 3, 18, 5],
+            vec![1, 12, 20, 15, 19],
+        ];
+
+        let numbers = vec![999, 8, 2, 23, 4, 24];
+
+        assert_eq!(
+            Some((24, 239)),
+            determine_bingo(&vec![999, 8, 2, 23, 4, 24], &board)
+        );
+
+        let x = vec![&8, &2, &23, &4, &24];
+        assert_eq!(x.as_slice(), board_numbers_for_board(&numbers, &board))
     }
 
     #[test]
